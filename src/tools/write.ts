@@ -35,12 +35,12 @@ const taxCodes = z
     'Numeric tax codes from list_taxes. Omit for goods that are not taxable. With two codes put VAT first and excise second.',
   );
 
-const idempotencyId = (what: string) =>
-  uuid(`Id for the new ${what}`)
-    .optional()
-    .describe(
-      `UUID for the new ${what}. Generated when omitted. Checkbox rejects a second document with the same id, so when a call ends with a timeout, retry with the id reported in the error.`,
-    );
+/** Checkbox documents the error `receipt.already_exists` for a receipt id that was used before. */
+const newReceiptId = uuid('Id for the new receipt')
+  .optional()
+  .describe(
+    'UUID for the new receipt. Generated when omitted. Checkbox rejects a second receipt with an id that already exists, so when a call ends with a timeout, retry with the id reported in the error.',
+  );
 
 const discount = z.strictObject({
   type: z.enum(['DISCOUNT', 'EXTRA_CHARGE']).describe('DISCOUNT lowers the amount, EXTRA_CHARGE raises it.'),
@@ -227,7 +227,11 @@ export const writeTools: readonly AnyTool[] = [
     description:
       'Opens a new shift (зміна) for the signed-in cashier on the cash register behind CHECKBOX_LICENSE_KEY. This is a fiscal action reported to the tax service; it cannot be undone, only ended by closing the shift. Opening is asynchronous: the shift starts as CREATED and becomes OPENED once it is signed and delivered, usually within seconds; CLOSED right after creation means the opening was refused (see initial_transaction). Check with get_current_shift. Checkbox warns that a shift opened through the API must not be operated from the Checkbox Kasa or Manager apps at the same time.',
     access: 'write',
-    inputSchema: z.strictObject({ id: idempotencyId('shift') }),
+    inputSchema: z.strictObject({
+      id: uuid('Id for the new shift')
+        .optional()
+        .describe('UUID for the new shift. Generated when omitted. When retrying after a timeout, pass the id reported in the error.'),
+    }),
     annotations: FISCAL_WRITE,
     handler: async (args, { client }) => {
       const id = args.id ?? randomUUID();
@@ -273,7 +277,7 @@ export const writeTools: readonly AnyTool[] = [
     description: `Creates and fiscalizes a sale receipt (чек продажу) in the open shift of the signed-in cashier. ${FISCAL_NOTICE} Prices and payments are in kopecks, quantities in thousandths (1000 = 1 piece). The payments must cover the receipt total. Requires an open shift (see get_current_shift). Checkbox accepts at most two receipts per second per cash register.`,
     access: 'write',
     inputSchema: z.strictObject({
-      id: idempotencyId('receipt'),
+      id: newReceiptId,
       payments: z.array(payment).min(1).max(10).describe('How the customer pays. The amounts must cover the receipt total.'),
       ...receiptFields,
     }),
@@ -291,7 +295,7 @@ export const writeTools: readonly AnyTool[] = [
     description: `Creates and fiscalizes a return receipt (чек повернення) in the open shift of the signed-in cashier: every listed line is returned to the seller and the money goes back to the customer. ${FISCAL_NOTICE} A return receipt cannot be cancelled either. List only the goods and quantities that are actually returned, with the prices of the original sale; amounts are positive, in kopecks. Pass related_receipt_id to link the return to the sale. Checkbox refuses to return more than was sold and to pay out more cash than the register holds.`,
     access: 'write',
     inputSchema: z.strictObject({
-      id: idempotencyId('receipt'),
+      id: newReceiptId,
       related_receipt_id: uuid('Id of the sale receipt that is being returned').optional(),
       payments: z.array(payment).min(1).max(10).describe('How the money is given back, as positive amounts.'),
       ...receiptFields,
@@ -311,7 +315,7 @@ export const writeTools: readonly AnyTool[] = [
       'Creates a service receipt (службове внесення / службова видача) in the open shift: "cash_in" puts cash into the register, for example change at the start of the day; "cash_out" takes cash out, for example a collection. It is not a sale, but it changes the cash balance, is included in the Z-report sent to the tax service, and cannot be edited or deleted afterwards. Confirm the amount and direction with the user before calling.',
     access: 'write',
     inputSchema: z.strictObject({
-      id: idempotencyId('receipt'),
+      id: newReceiptId,
       operation: z.enum(['cash_in', 'cash_out']).describe('cash_in adds cash to the register, cash_out removes it.'),
       amount: kopecks('Amount of cash, always positive'),
     }),
