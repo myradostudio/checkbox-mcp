@@ -1,0 +1,2832 @@
+{
+  "source": "https://api.checkbox.ua/api/openapi.json",
+  "title": "checkbox API",
+  "version": "2.108.3+d569e323",
+  "operations": {
+    "GET /api/v1/cash-registers": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "fiscal_number",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "in_use",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 25,
+            "exclusiveMinimum": 0,
+            "maximum": 1000,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "offset",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/cash-registers/{cash_register_id}": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "cash_register_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "format": "uuid",
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/cash-registers/get-offline-codes-count": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-License-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/cash-registers/get-offline-time": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-License-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "from_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "to_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/cash-registers/info": {
+      "security": false,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-License-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/cash-registers/shifts": {
+      "security": false,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-License-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "desc",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "from_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 25,
+            "exclusiveMinimum": 0,
+            "maximum": 50,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "offset",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "statuses",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftStatus"
+            },
+            "type": "array"
+          }
+        },
+        {
+          "name": "to_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/cashier/me": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/cashier/shift": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/cashier/tax": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/goods": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "barcode",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "group_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 25,
+            "exclusiveMinimum": 0,
+            "maximum": 1000,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "load_children",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "load_group",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "name",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "offset",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "order_by_code",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoodsIntegrationOrdering"
+              }
+            ]
+          }
+        },
+        {
+          "name": "order_by_count",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoodsIntegrationOrdering"
+              }
+            ]
+          }
+        },
+        {
+          "name": "order_by_name",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoodsIntegrationOrdering"
+              }
+            ]
+          }
+        },
+        {
+          "name": "order_by_position",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoodsIntegrationOrdering"
+              }
+            ]
+          }
+        },
+        {
+          "name": "order_by_price",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoodsIntegrationOrdering"
+              }
+            ]
+          }
+        },
+        {
+          "name": "query",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "without_group_only",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/orders": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-License-Key",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "delivered_from_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "delivered_to_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "delivery_desc",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "desc",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 25,
+            "exclusiveMinimum": 0,
+            "maximum": 1000,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "offset",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "order_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "orders_all",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "items": {
+              "$ref": "#/components/schemas/srso__schema__order__orders__OrderStatus"
+            },
+            "type": "array"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/orders/{order_id}": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "order_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "orders_all",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/receipts/{receipt_id}": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "receipt_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "pattern": "^[\\w-]{11}$",
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/receipts/{receipt_id}/text": {
+      "security": false,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "receipt_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "pattern": "^[\\w-]{11}$",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "is_second_copy",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "organization_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        {
+          "name": "width",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 42,
+            "maximum": 250,
+            "minimum": 10,
+            "type": "integer"
+          }
+        }
+      ],
+      "responseTypes": [
+        "text/plain"
+      ]
+    },
+    "GET /api/v1/receipts/search": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "barcode",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "branch_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        {
+          "name": "cash_register_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        {
+          "name": "desc",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "fiscal_code",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "from_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 25,
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "offset",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "self_receipts",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "shift_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        {
+          "name": "stock_code",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "to_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/reports/{report_id}": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "report_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "format": "uuid",
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/reports/{report_id}/text": {
+      "security": false,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "report_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        {
+          "name": "width",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 42,
+            "maximum": 250,
+            "minimum": 10,
+            "type": "integer"
+          }
+        }
+      ],
+      "responseTypes": [
+        "text/plain"
+      ]
+    },
+    "GET /api/v1/reports/periodical": {
+      "security": false,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-License-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "from_date",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "is_short",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "to_date",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "width",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 42,
+            "maximum": 250,
+            "minimum": 10,
+            "type": "integer"
+          }
+        }
+      ],
+      "responseTypes": [
+        "text/plain"
+      ]
+    },
+    "GET /api/v1/reports/search": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "cash_register_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        {
+          "name": "desc",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "from_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "is_z_report",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 25,
+            "exclusiveMinimum": 0,
+            "maximum": 1000,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "offset",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "serial",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "shift_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        {
+          "name": "to_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/shifts": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "desc",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "from_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 25,
+            "exclusiveMinimum": 0,
+            "maximum": 1000,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "offset",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        {
+          "name": "statuses",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftStatus"
+            },
+            "type": "array"
+          }
+        },
+        {
+          "name": "to_date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "format": "date-time",
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "GET /api/v1/shifts/{shift_id}": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "shift_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "format": "uuid",
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "POST /api/v1/cashier/signin": {
+      "security": false,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Device-ID",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ],
+      "requestBody": {
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/CashierSignIn"
+        }
+      }
+    },
+    "POST /api/v1/cashier/signinPinCode": {
+      "security": false,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Device-ID",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-License-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ],
+      "requestBody": {
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/CashierSignInPinCode"
+        }
+      }
+    },
+    "POST /api/v1/cashier/signout": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ]
+    },
+    "POST /api/v1/receipts/{receipt_id}/email": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "receipt_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "pattern": "^[\\w-]{11}$",
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ],
+      "requestBody": {
+        "required": true,
+        "schema": {
+          "items": {
+            "format": "email",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      }
+    },
+    "POST /api/v1/receipts/{receipt_id}/sms": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "receipt_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "pattern": "^[\\w-]{11}$",
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ],
+      "requestBody": {
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/ReceiptDeliverySmsPayload"
+        }
+      }
+    },
+    "POST /api/v1/receipts/sell": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Access-Key",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Device-ID",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ],
+      "requestBody": {
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/ReceiptSellPayload"
+        }
+      }
+    },
+    "POST /api/v1/receipts/service": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Access-Key",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Device-ID",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ],
+      "requestBody": {
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/ReceiptServicePayload"
+        }
+      }
+    },
+    "POST /api/v1/shifts": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Device-ID",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-License-Key",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ],
+      "requestBody": {
+        "required": false,
+        "schema": {
+          "$ref": "#/components/schemas/CreateShiftPayload"
+        }
+      }
+    },
+    "POST /api/v1/shifts/close": {
+      "security": true,
+      "parameters": [
+        {
+          "name": "X-Access-Key",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Name",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Client-Version",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "X-Device-ID",
+          "in": "header",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responseTypes": [
+        "application/json"
+      ],
+      "requestBody": {
+        "required": false,
+        "schema": {
+          "$ref": "#/components/schemas/CloseShiftPayload"
+        }
+      }
+    }
+  },
+  "schemas": {
+    "BonusPayload": {
+      "properties": {
+        "additional_info": {
+          "type": "string"
+        },
+        "bonus_card": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bonus_card",
+        "value"
+      ],
+      "type": "object"
+    },
+    "CardPaymentPayload": {
+      "properties": {
+        "acquirer_and_seller": {
+          "type": "string"
+        },
+        "acquiring": {
+          "type": "string"
+        },
+        "auth_code": {
+          "type": "string"
+        },
+        "bank_name": {
+          "type": "string"
+        },
+        "card_mask": {
+          "maxLength": 19,
+          "type": "string"
+        },
+        "code": {
+          "default": 1,
+          "exclusiveMaximum": 10,
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        "commission": {
+          "type": "integer"
+        },
+        "ereceipt_data": {
+          "$ref": "#/components/schemas/EReceiptDataPayload"
+        },
+        "label": {
+          "default": "Картка",
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        "operation_type": {
+          "type": "string"
+        },
+        "owner_name": {
+          "type": "string"
+        },
+        "pawnshop_is_return": {
+          "type": "boolean"
+        },
+        "payment_system": {
+          "type": "string"
+        },
+        "provider_type": {
+          "$ref": "#/components/schemas/ProviderType"
+        },
+        "receipt_no": {
+          "type": "string"
+        },
+        "rrn": {
+          "type": "string"
+        },
+        "signature_required": {
+          "type": "boolean"
+        },
+        "tapxphone_terminal": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "terminal": {
+          "type": "string"
+        },
+        "transaction_id": {
+          "type": "string"
+        },
+        "type": {
+          "default": "CASHLESS",
+          "enum": [
+            "CASHLESS"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "exclusiveMaximum": 100000000000,
+          "exclusiveMinimum": -100000000000,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "type": "object"
+    },
+    "CashierSignIn": {
+      "properties": {
+        "login": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "password": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "login",
+        "password"
+      ],
+      "type": "object"
+    },
+    "CashierSignInPinCode": {
+      "properties": {
+        "pin_code": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pin_code"
+      ],
+      "type": "object"
+    },
+    "CashPaymentPayload": {
+      "properties": {
+        "label": {
+          "default": "Готівка",
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        "operation_type": {
+          "type": "string"
+        },
+        "pawnshop_is_return": {
+          "type": "boolean"
+        },
+        "type": {
+          "default": "CASH",
+          "enum": [
+            "CASH"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "exclusiveMaximum": 100000000000,
+          "exclusiveMinimum": -100000000000,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "type": "object"
+    },
+    "CloseShiftPayload": {
+      "properties": {
+        "fiscal_code": {
+          "type": "string"
+        },
+        "fiscal_date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "report": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/ReportPayload"
+            }
+          ]
+        },
+        "skip_client_name_check": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "CreateShiftPayload": {
+      "properties": {
+        "auto_close_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "fiscal_code": {
+          "type": "string"
+        },
+        "fiscal_date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "DeliveryPayload": {
+      "properties": {
+        "email": {
+          "format": "email",
+          "type": "string"
+        },
+        "emails": {
+          "items": {
+            "format": "email",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "phone": {
+          "pattern": "\\+?380\\d{9}$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "DiscountMode": {
+      "enum": [
+        "PERCENT",
+        "VALUE"
+      ],
+      "type": "string"
+    },
+    "DiscountPayload": {
+      "properties": {
+        "mode": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/DiscountMode"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "privilege": {
+          "type": "string"
+        },
+        "tax_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "tax_codes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "type": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/DiscountType"
+            }
+          ]
+        },
+        "value": {
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "mode",
+        "value"
+      ],
+      "type": "object"
+    },
+    "DiscountType": {
+      "enum": [
+        "DISCOUNT",
+        "PRE_PAYMENT",
+        "EXTRA_CHARGE"
+      ],
+      "type": "string"
+    },
+    "EReceiptDataPayload": {
+      "properties": {
+        "bank_transaction_id": {
+          "maxLength": 255,
+          "type": "string"
+        },
+        "company_registration_id": {
+          "maxLength": 255,
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 255,
+          "type": "string"
+        },
+        "receipt_id": {
+          "maxLength": 255,
+          "type": "string"
+        }
+      },
+      "required": [
+        "bank_transaction_id"
+      ],
+      "type": "object"
+    },
+    "GoodDetailsPayload": {
+      "properties": {
+        "barcode": {
+          "maxLength": 4096,
+          "type": "string"
+        },
+        "code": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        "e_excise_barcodes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "excise_barcode": {
+          "maxLength": 4096,
+          "type": "string"
+        },
+        "excise_barcodes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "footer": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "header": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "original_price": {
+          "type": "integer"
+        },
+        "price": {
+          "exclusiveMaximum": 100000000000,
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        "tax": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2,
+              "type": "array"
+            }
+          ]
+        },
+        "taxes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2,
+              "type": "array"
+            }
+          ]
+        },
+        "uktzed": {
+          "maxLength": 64,
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "name",
+        "price"
+      ],
+      "type": "object"
+    },
+    "GoodItemPayload": {
+      "properties": {
+        "discounts": {
+          "default": [],
+          "items": {
+            "$ref": "#/components/schemas/DiscountPayload"
+          },
+          "type": "array"
+        },
+        "good": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/GoodDetailsPayload"
+            }
+          ]
+        },
+        "good_id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "is_return": {
+          "default": false,
+          "type": "boolean"
+        },
+        "is_winnings_payout": {
+          "type": "boolean"
+        },
+        "quantity": {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        "total_sum": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "good",
+        "quantity"
+      ],
+      "type": "object"
+    },
+    "GoodsIntegrationOrdering": {
+      "enum": [
+        "asc",
+        "desc"
+      ],
+      "type": "string"
+    },
+    "ObsoleteCardPaymentPayload": {
+      "properties": {
+        "acquirer_and_seller": {
+          "type": "string"
+        },
+        "acquiring": {
+          "type": "string"
+        },
+        "auth_code": {
+          "type": "string"
+        },
+        "bank_name": {
+          "type": "string"
+        },
+        "card_mask": {
+          "maxLength": 19,
+          "type": "string"
+        },
+        "code": {
+          "default": 1,
+          "exclusiveMaximum": 10,
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        "commission": {
+          "type": "integer"
+        },
+        "ereceipt_data": {
+          "$ref": "#/components/schemas/EReceiptDataPayload"
+        },
+        "label": {
+          "default": "Картка",
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        "operation_type": {
+          "type": "string"
+        },
+        "owner_name": {
+          "type": "string"
+        },
+        "pawnshop_is_return": {
+          "type": "boolean"
+        },
+        "payment_system": {
+          "type": "string"
+        },
+        "provider_type": {
+          "$ref": "#/components/schemas/ProviderType"
+        },
+        "receipt_no": {
+          "type": "string"
+        },
+        "rrn": {
+          "type": "string"
+        },
+        "signature_required": {
+          "type": "boolean"
+        },
+        "tapxphone_terminal": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "terminal": {
+          "type": "string"
+        },
+        "transaction_id": {
+          "type": "string"
+        },
+        "type": {
+          "default": "CARD",
+          "enum": [
+            "CARD"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "exclusiveMaximum": 100000000000,
+          "exclusiveMinimum": -100000000000,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "type": "object"
+    },
+    "PaymentType": {
+      "enum": [
+        "CASH",
+        "CARD",
+        "CASHLESS"
+      ],
+      "type": "string"
+    },
+    "ProviderType": {
+      "enum": [
+        "TAPXPHONE",
+        "POSCONTROL",
+        "TERMINAL",
+        "ANDROID_PAYLINK",
+        "DESKTOP_PAYLINK"
+      ],
+      "type": "string"
+    },
+    "ReceiptConfigTotalSizeRestrictionPayload": {
+      "properties": {
+        "html_body_style": {
+          "type": "string"
+        },
+        "html_global_footer": {
+          "type": "string"
+        },
+        "html_global_header": {
+          "type": "string"
+        },
+        "html_light_block_style": {
+          "type": "string"
+        },
+        "html_receipt_style": {
+          "type": "string"
+        },
+        "html_ruler_style": {
+          "type": "string"
+        },
+        "text_global_footer": {
+          "type": "string"
+        },
+        "text_global_header": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ReceiptDeliverySmsPayload": {
+      "properties": {
+        "phone": {
+          "pattern": "^380\\d{9}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "phone"
+      ],
+      "type": "object"
+    },
+    "ReceiptSellPayload": {
+      "properties": {
+        "barcode": {
+          "type": "string"
+        },
+        "bonuses": {
+          "default": [],
+          "items": {
+            "$ref": "#/components/schemas/BonusPayload"
+          },
+          "type": "array"
+        },
+        "callback_url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "type": "string"
+        },
+        "cashier_name": {
+          "type": "string"
+        },
+        "context": {
+          "type": "object"
+        },
+        "control_number": {
+          "anyOf": [
+            {
+              "maxLength": 4,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "custom": {
+          "$ref": "#/components/schemas/ReceiptConfigTotalSizeRestrictionPayload"
+        },
+        "delivery": {
+          "$ref": "#/components/schemas/DeliveryPayload"
+        },
+        "departament": {
+          "type": "string"
+        },
+        "discounts": {
+          "default": [],
+          "items": {
+            "$ref": "#/components/schemas/DiscountPayload"
+          },
+          "type": "array"
+        },
+        "footer": {
+          "type": "string"
+        },
+        "goods": {
+          "items": {
+            "$ref": "#/components/schemas/GoodItemPayload"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "header": {
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "is_pawnshop": {
+          "type": "boolean"
+        },
+        "order_id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "payments": {
+          "default": [],
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CashPaymentPayload"
+              },
+              {
+                "$ref": "#/components/schemas/CardPaymentPayload"
+              },
+              {
+                "$ref": "#/components/schemas/ObsoleteCardPaymentPayload"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "previous_receipt_id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "related_receipt_created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "related_receipt_id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "rounding": {
+          "default": false,
+          "type": "boolean"
+        },
+        "rounding_mode": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/RoundingModeEnum"
+            }
+          ]
+        },
+        "stock_code": {
+          "type": "string"
+        },
+        "technical_return": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "goods"
+      ],
+      "type": "object"
+    },
+    "ReceiptServicePayload": {
+      "properties": {
+        "context": {
+          "type": "object"
+        },
+        "control_number": {
+          "anyOf": [
+            {
+              "maxLength": 4,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "custom": {
+          "$ref": "#/components/schemas/ReceiptConfigTotalSizeRestrictionPayload"
+        },
+        "fiscal_code": {
+          "type": "string"
+        },
+        "fiscal_date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "footer": {
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "payment": {
+          "$ref": "#/components/schemas/CashPaymentPayload"
+        }
+      },
+      "required": [
+        "payment"
+      ],
+      "type": "object"
+    },
+    "ReportPayload": {
+      "properties": {
+        "balance": {
+          "type": "integer"
+        },
+        "cash_withdrawal_receipts_count": {
+          "default": 0,
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "currency_exchange_count": {
+          "default": 0,
+          "type": "integer"
+        },
+        "discounts_sum": {
+          "type": "integer"
+        },
+        "extra_charge_sum": {
+          "type": "integer"
+        },
+        "id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "initial": {
+          "type": "integer"
+        },
+        "last_receipt_id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "payments": {
+          "items": {
+            "$ref": "#/components/schemas/ReportPaymentsPayload"
+          },
+          "type": "array"
+        },
+        "return_receipts_count": {
+          "type": "integer"
+        },
+        "returns_round_down": {
+          "default": 0,
+          "type": "integer"
+        },
+        "returns_round_up": {
+          "default": 0,
+          "type": "integer"
+        },
+        "sales_round_down": {
+          "default": 0,
+          "type": "integer"
+        },
+        "sales_round_up": {
+          "default": 0,
+          "type": "integer"
+        },
+        "sell_receipts_count": {
+          "type": "integer"
+        },
+        "serial": {
+          "type": "integer"
+        },
+        "taxes": {
+          "items": {
+            "$ref": "#/components/schemas/ReportTaxesPayload"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "payments",
+        "taxes",
+        "sell_receipts_count",
+        "return_receipts_count",
+        "initial",
+        "balance"
+      ],
+      "type": "object"
+    },
+    "ReportPaymentsPayload": {
+      "properties": {
+        "cash_withdrawal": {
+          "default": 0,
+          "type": "integer"
+        },
+        "cash_withdrawal_commission": {
+          "default": 0,
+          "type": "integer"
+        },
+        "code": {
+          "type": "integer"
+        },
+        "label": {
+          "type": "string"
+        },
+        "provider_type": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/ProviderType"
+            }
+          ]
+        },
+        "return_sum": {
+          "type": "integer"
+        },
+        "sell_sum": {
+          "type": "integer"
+        },
+        "service_in": {
+          "type": "integer"
+        },
+        "service_out": {
+          "type": "integer"
+        },
+        "type": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/PaymentType"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "sell_sum",
+        "return_sum",
+        "service_in",
+        "service_out"
+      ],
+      "type": "object"
+    },
+    "ReportTaxesPayload": {
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "extra_rate": {
+          "type": "number"
+        },
+        "included": {
+          "default": true,
+          "type": "boolean"
+        },
+        "is_gambling": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        },
+        "no_vat": {
+          "type": "boolean"
+        },
+        "rate": {
+          "type": "number"
+        },
+        "return_extra_value": {
+          "type": "number"
+        },
+        "return_sum": {
+          "type": "number"
+        },
+        "return_value": {
+          "type": "number"
+        },
+        "returns_turnover": {
+          "type": "number"
+        },
+        "sales_turnover": {
+          "type": "number"
+        },
+        "sell_extra_value": {
+          "type": "number"
+        },
+        "sell_sum": {
+          "type": "number"
+        },
+        "sell_value": {
+          "type": "number"
+        },
+        "setup_date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "type": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/TaxTypeEnum"
+            }
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "label",
+        "symbol",
+        "rate",
+        "extra_rate",
+        "sell_sum",
+        "return_sum",
+        "sales_turnover",
+        "returns_turnover",
+        "setup_date"
+      ],
+      "type": "object"
+    },
+    "RoundingModeEnum": {
+      "enum": [
+        "ROUND_10",
+        "ROUND_50"
+      ],
+      "type": "string"
+    },
+    "ShiftStatus": {
+      "enum": [
+        "CREATED",
+        "OPENING",
+        "OPENED",
+        "CLOSING",
+        "CLOSED"
+      ]
+    },
+    "srso__schema__order__orders__OrderStatus": {
+      "enum": [
+        "PENDING",
+        "SAVING",
+        "SUCCESS",
+        "CANCELLED"
+      ],
+      "type": "string"
+    },
+    "TaxTypeEnum": {
+      "enum": [
+        "INCLUDED",
+        "EXCLUDED",
+        "GAMBLING",
+        "MIXED"
+      ],
+      "type": "string"
+    }
+  }
+}
