@@ -104,7 +104,7 @@ const delivery = z
       .string()
       .regex(/^380\d{9}$/, 'Must be 380 followed by 9 digits.')
       .optional()
-      .describe('Customer phone as 380XXXXXXXXX for a copy by SMS/Viber. Works only when that paid service is enabled in Checkbox.'),
+      .describe('Customer phone as 380XXXXXXXXX for a copy by SMS/Viber. Works only when that service is activated in Checkbox.'),
   })
   .optional()
   .describe('Where Checkbox should send a copy of the receipt.');
@@ -352,7 +352,7 @@ export const writeTools: readonly AnyTool[] = [
     name: 'send_receipt_sms',
     title: 'Send a receipt by SMS or Viber',
     description:
-      'Asks Checkbox to send a copy of an existing receipt to a phone number by Viber or SMS. This is a paid Checkbox service that must be activated in the Checkbox portal first. Does not change any fiscal data, but the message cannot be recalled: confirm the number with the user.',
+      'Asks Checkbox to send a copy of an existing receipt to a phone number by Viber or SMS. Checkbox bills this service separately and it has to be activated in the Checkbox portal first. Does not change any fiscal data, but the message cannot be recalled: confirm the number with the user.',
     access: 'write',
     inputSchema: z.strictObject({
       receipt_id: receiptId,

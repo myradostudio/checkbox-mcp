@@ -126,7 +126,7 @@ claude mcp add --transport stdio \
 | `create_return_receipt` | Створює і фіскалізує чек повернення | `POST /api/v1/receipts/sell` з ознакою `is_return` у кожному рядку |
 | `create_service_receipt` | Службове внесення готівки в касу або службова видача | `POST /api/v1/receipts/service` |
 | `send_receipt_email` | Надсилає копію чека електронною поштою | `POST /api/v1/receipts/{id}/email` |
-| `send_receipt_sms` | Надсилає копію чека через SMS або Viber (платна послуга Checkbox) | `POST /api/v1/receipts/{id}/sms` |
+| `send_receipt_sms` | Надсилає копію чека через SMS або Viber (послуга Checkbox з окремою оплатою) | `POST /api/v1/receipts/{id}/sms` |
 
 **Чек — фіскальний документ. Створений чек не можна ні змінити, ні видалити; помилку можна лише компенсувати окремим чеком повернення.** Те саме стосується відкритої чи закритої зміни.
 

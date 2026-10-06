@@ -34,7 +34,7 @@ export const dateTime = (what: string) =>
     .regex(DATE_TIME_PATTERN, 'Must be an ISO 8601 date-time with a UTC offset, e.g. 2026-10-01T00:00:00+03:00.')
     .refine((value) => !Number.isNaN(Date.parse(value)), 'Not a valid date-time.')
     .describe(
-      `${what} ISO 8601 date-time with a UTC offset, e.g. 2026-10-01T00:00:00+03:00. Use the Kyiv offset (+02:00 in winter, +03:00 in summer) unless the user says otherwise.`,
+      `${what} ISO 8601 with a UTC offset, e.g. 2026-10-01T00:00:00+03:00 (Kyiv is +02:00 in winter, +03:00 in summer).`,
     );
 
 export const limit = z

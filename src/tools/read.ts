@@ -303,7 +303,7 @@ export const readTools: readonly AnyTool[] = [
     name: 'search_goods',
     title: 'Search the goods catalogue',
     description:
-      'Searches the goods catalogue (номенклатура) kept in Checkbox. Returns code, name, price in kopecks, barcode, UKTZED code, group, tax rates and stock count where the organization tracks it. Organizations that send goods only inside receipts have an empty catalogue.',
+      'Searches the goods catalogue (номенклатура) kept in Checkbox. Returns code, name, price in kopecks, barcode, UKTZED code, group, tax rates and stock count where the organization tracks it. The catalogue can be empty when the organization does not keep its goods in Checkbox.',
     access: 'read',
     inputSchema: z.object({
       query: z.string().min(1).optional().describe('Search text.'),

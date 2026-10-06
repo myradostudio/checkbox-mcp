@@ -94,8 +94,10 @@ describe('stdio server process', () => {
     });
     let stderr = '';
     transport.stderr?.on('data', (chunk: Buffer) => (stderr += chunk.toString()));
-    const client = new Client({ name: 'e2e-test', version: '1.0.0' });
+    // "legacy" is the 2025-era handshake, spoken by every host that has not moved to the 2026 protocol.
+    const client = new Client({ name: 'e2e-test', version: '1.0.0' }, { versionNegotiation: { mode: 'legacy' } });
     await client.connect(transport);
+    assert.match(client.getNegotiatedProtocolVersion() ?? '', /^2025-/);
 
     const { tools } = await client.listTools();
     assert.deepEqual(
@@ -149,7 +151,7 @@ describe('stdio server process', () => {
     }
   });
 
-  it('adds the write tools when CHECKBOX_ALLOW_WRITE=1', async () => {
+  it('adds the write tools when CHECKBOX_ALLOW_WRITE=1, also for a client of the 2026 protocol', async () => {
     const transport = new StdioClientTransport({
       command: process.execPath,
       args: [SERVER_ENTRY],
@@ -158,12 +160,15 @@ describe('stdio server process', () => {
     });
     let stderr = '';
     transport.stderr?.on('data', (chunk: Buffer) => (stderr += chunk.toString()));
-    const client = new Client({ name: 'e2e-test', version: '1.0.0' });
+    // "auto" negotiates the newest protocol revision; the first test used the 2025-era handshake.
+    const client = new Client({ name: 'e2e-test', version: '1.0.0' }, { versionNegotiation: { mode: 'auto' } });
     await client.connect(transport);
 
+    const protocolVersion = client.getNegotiatedProtocolVersion() ?? '';
     const { tools } = await client.listTools();
     await client.close();
 
+    assert.ok(protocolVersion >= '2026-07-28', `negotiated ${protocolVersion}`);
     assert.equal(tools.length, 23);
     assert.deepEqual(
       tools.filter((tool) => tool.annotations?.readOnlyHint !== true).map((tool) => tool.name),

@@ -126,7 +126,7 @@ List tools return compact summaries and a `pagination` block. The page size defa
 | `create_return_receipt` | Creates and fiscalizes a return receipt | `POST /api/v1/receipts/sell` with `is_return` on every line |
 | `create_service_receipt` | Puts cash into the register or takes it out | `POST /api/v1/receipts/service` |
 | `send_receipt_email` | E-mails a copy of a receipt | `POST /api/v1/receipts/{id}/email` |
-| `send_receipt_sms` | Sends a copy of a receipt by SMS/Viber (a paid Checkbox service) | `POST /api/v1/receipts/{id}/sms` |
+| `send_receipt_sms` | Sends a copy of a receipt by SMS/Viber (a Checkbox service billed separately) | `POST /api/v1/receipts/{id}/sms` |
 
 **A receipt is a fiscal document. Once created it cannot be edited or deleted; a mistake can only be compensated with a separate return receipt.** The same goes for an opened or closed shift.
 
