@@ -12,6 +12,8 @@ export interface RecordedRequest {
   readonly headers: Readonly<Record<string, string>>;
   /** Parsed JSON body, or undefined when the request had none. */
   readonly body: unknown;
+  /** The redirect mode the client asked for. */
+  readonly redirect: RequestInit['redirect'];
 }
 
 type Responder = (request: RecordedRequest) => Response | Promise<Response>;
@@ -85,6 +87,7 @@ export class FakeApi {
       url: new URL(url),
       headers,
       body: typeof init.body === 'string' ? JSON.parse(init.body) : undefined,
+      redirect: init.redirect,
     };
     this.requests.push(request);
 

@@ -12,7 +12,7 @@ import { z } from 'zod';
 
 import type { CheckboxClient, RequestOptions } from '../client.js';
 import { ENDPOINTS, type Endpoint } from '../endpoints.js';
-import { CheckboxTransportError, ToolError } from '../errors.js';
+import { CheckboxApiError, describeError, MissingLicenseKeyError, SignInError, ToolError } from '../errors.js';
 import { isObject, receiptId, uuid } from './schemas.js';
 import { summarizeReceipt, summarizeShift } from './summaries.js';
 import { defineTool, FISCAL_WRITE, NON_FISCAL_WRITE, type AnyTool, type ToolOutput } from './types.js';
@@ -181,9 +181,27 @@ export function buildSellPayload(id: string, args: SellArguments, isReturn: bool
 }
 
 /**
- * Sends a request that creates a fiscal document. If no response arrives, the
- * outcome is unknown: the error tells the model how to find out instead of
- * inviting a blind retry that could register the document twice.
+ * True when the failure proves that Checkbox did not register the operation:
+ * the request was never sent, or the API refused it with a client error.
+ * 408 and 429 are left out on purpose: a timeout or a "still being processed"
+ * answer says nothing about what happened to the document.
+ */
+function isDefiniteRefusal(error: unknown): boolean {
+  if (error instanceof MissingLicenseKeyError || error instanceof SignInError || error instanceof ToolError) return true;
+  return (
+    error instanceof CheckboxApiError &&
+    error.status >= 400 &&
+    error.status < 500 &&
+    error.status !== 408 &&
+    error.status !== 429
+  );
+}
+
+/**
+ * Sends a request that creates a fiscal document. Unless the failure is a
+ * definite refusal, the outcome is unknown (no response, a gateway error, an
+ * unreadable response): the error then tells the model how to find out instead
+ * of inviting a blind retry that could register the document twice.
  */
 async function submit(
   client: CheckboxClient,
@@ -194,12 +212,11 @@ async function submit(
   try {
     return await client.request(endpoint, options);
   } catch (error) {
-    if (error instanceof CheckboxTransportError) {
-      throw new ToolError(
-        `${error.message} It is unknown whether Checkbox registered the operation. Do not simply repeat the call. ${recovery}`,
-      );
-    }
-    throw error;
+    if (isDefiniteRefusal(error)) throw error;
+    throw new ToolError(
+      `${describeError(error)}
+It is unknown whether Checkbox registered the operation. Do not simply repeat the call. ${recovery}`,
+    );
   }
 }
 

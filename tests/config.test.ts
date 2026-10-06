@@ -56,6 +56,11 @@ describe('loadConfig', () => {
     assert.equal(config.allowWrite, false);
   });
 
+  it('does not alter a password that starts or ends with a space', () => {
+    const config = loadConfig({ CHECKBOX_LOGIN: 'cashier', CHECKBOX_PASSWORD: ' pass word ' });
+    assert.deepEqual(config.auth, { method: 'password', login: 'cashier', password: ' pass word ' });
+  });
+
   it('rejects missing credentials with an actionable message', () => {
     const problems = problemsOf({});
     assert.equal(problems.length, 1);

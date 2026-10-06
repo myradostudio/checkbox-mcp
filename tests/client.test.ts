@@ -3,20 +3,49 @@ import { describe, it } from 'node:test';
 
 import { CheckboxClient, type FetchLike } from '../src/client.js';
 import { ENDPOINTS } from '../src/endpoints.js';
-import { CheckboxApiError, CheckboxTransportError, MissingLicenseKeyError, describeError } from '../src/errors.js';
+import {
+  CheckboxApiError,
+  CheckboxTransportError,
+  MissingLicenseKeyError,
+  SignInError,
+  UnexpectedResponseError,
+  describeError,
+} from '../src/errors.js';
 import { SERVER_NAME, SERVER_VERSION } from '../src/version.js';
 import { FakeApi, hang, json, text } from './support/fake-api.js';
 import { LICENSE_KEY, PASSWORD, PIN_AUTH, PIN_CODE, testConfig } from './support/harness.js';
 import { assertMatchesSpec } from './support/spec.js';
 
 const ME = '/api/v1/cashier/me';
+const MINUTE = 60_000;
 
-function setup(overrides: Parameters<typeof testConfig>[0] = {}, now?: () => number) {
+function setup(overrides: Parameters<typeof testConfig>[0] = {}) {
   const api = new FakeApi();
   const config = testConfig(overrides);
-  const client = new CheckboxClient({ config, fetch: api.fetch, ...(now ? { now } : {}) });
-  return { api, client, config };
+  let clock = 1_000_000;
+  const client = new CheckboxClient({ config, fetch: api.fetch, now: () => clock });
+  return {
+    api,
+    client,
+    config,
+    /** Moves the client's clock forward. */
+    advance: (ms: number) => {
+      clock += ms;
+    },
+  };
 }
+
+/** A client that signed in a while ago, so its token is old enough to be replaced on a 401. */
+async function setupWithAgedToken() {
+  const context = setup();
+  context.api.on('GET', ME, json({}));
+  await context.client.request(ENDPOINTS.cashierProfile);
+  context.advance(2 * MINUTE);
+  return context;
+}
+
+const rejectsFirstToken = (ok: unknown) => (request: { headers: Readonly<Record<string, string>> }) =>
+  request.headers['authorization'] === 'Bearer token-1' ? json({ message: 'Невірний токен доступу' }, 401) : json(ok);
 
 async function rejection(promise: Promise<unknown>): Promise<unknown> {
   try {
@@ -96,27 +125,21 @@ describe('authentication', () => {
   });
 
   it('re-authenticates once on 401 and repeats the request with the new token', async () => {
-    const { api, client } = setup();
-    api.on('GET', ME, (request) =>
-      request.headers['authorization'] === 'Bearer token-1'
-        ? json({ message: 'Невірний токен доступу' }, 401)
-        : json({ id: 'cashier-1' }),
-    );
+    const { api, client } = await setupWithAgedToken();
+    api.on('GET', ME, rejectsFirstToken({ id: 'cashier-1' }));
 
     assert.deepEqual(await client.request(ENDPOINTS.cashierProfile), { id: 'cashier-1' });
 
     assert.equal(api.signIns, 2);
     assert.deepEqual(
       api.callsTo(ME).map((request) => request.headers['authorization']),
-      ['Bearer token-1', 'Bearer token-2'],
+      ['Bearer token-1', 'Bearer token-1', 'Bearer token-2'],
     );
   });
 
   it('repeats a write request after 401 with the same body', async () => {
-    const { api, client } = setup();
-    api.on('POST', '/api/v1/receipts/service', (request) =>
-      request.headers['authorization'] === 'Bearer token-1' ? json({ message: 'expired' }, 401) : json({ id: 'r1' }, 201),
-    );
+    const { api, client } = await setupWithAgedToken();
+    api.on('POST', '/api/v1/receipts/service', rejectsFirstToken({ id: 'r1' }));
     const body = { id: '5b0e0f0a-1c1d-4e2f-8a3b-4c5d6e7f8a9b', payment: { type: 'CASH', value: 100 } };
 
     await client.request(ENDPOINTS.serviceReceipt, { body });
@@ -128,7 +151,7 @@ describe('authentication', () => {
   });
 
   it('gives up after a second 401 instead of looping', async () => {
-    const { api, client } = setup();
+    const { api, client } = await setupWithAgedToken();
     api.on('GET', ME, json({ message: 'Невірний ключ ліцензії' }, 401));
 
     const error = await rejection(client.request(ENDPOINTS.cashierProfile));
@@ -136,37 +159,37 @@ describe('authentication', () => {
     assert.ok(error instanceof CheckboxApiError);
     assert.equal(error.status, 401);
     assert.equal(api.signIns, 2);
-    assert.equal(api.callsTo(ME).length, 2);
+    assert.equal(api.callsTo(ME).length, 3, 'the first successful call, the rejected call and one repeat');
   });
 
-  it('does not sign in again on every 401 within the cooldown', async () => {
-    let clock = 1_000_000;
-    const { api, client } = setup({}, () => clock);
+  it('does not replace a token that was issued less than a minute ago', async () => {
+    // A 401 right after signing in is not an expired token (Checkbox answers 401 for a
+    // wrong license key too). Signing in again would only use up the cashier's token slots.
+    const { api, client, advance } = setup();
     api.on('GET', ME, json({ message: 'Невірний ключ ліцензії' }, 401));
 
     await rejection(client.request(ENDPOINTS.cashierProfile));
-    assert.equal(api.signIns, 2);
+    await rejection(client.request(ENDPOINTS.cashierProfile));
+    assert.equal(api.signIns, 1, 'the very first 401 does not trigger a second sign-in');
 
-    // Still inside the cooldown: the 401 is reported, no token slot is consumed.
-    clock += 30_000;
+    advance(MINUTE + 1);
+    await rejection(client.request(ENDPOINTS.cashierProfile));
+    assert.equal(api.signIns, 2, 'an older token is replaced once');
+
+    advance(MINUTE / 2);
     await rejection(client.request(ENDPOINTS.cashierProfile));
     await rejection(client.request(ENDPOINTS.cashierProfile));
-    assert.equal(api.signIns, 2);
+    assert.equal(api.signIns, 2, 'but not again within the next minute');
 
-    // After the cooldown one more attempt is allowed.
-    clock += 31_000;
+    advance(MINUTE);
     await rejection(client.request(ENDPOINTS.cashierProfile));
     assert.equal(api.signIns, 3);
   });
 
   it('recovers concurrent requests that all hit the same revoked token', async () => {
-    const { api, client } = setup();
-    api.on('GET', ME, json({}));
-    await client.request(ENDPOINTS.cashierProfile);
+    const { api, client } = await setupWithAgedToken();
+    api.on('GET', ME, rejectsFirstToken({ ok: true }));
 
-    api.on('GET', ME, (request) =>
-      request.headers['authorization'] === 'Bearer token-1' ? json({ message: 'revoked' }, 401) : json({ ok: true }),
-    );
     const results = await Promise.all([
       client.request(ENDPOINTS.cashierProfile),
       client.request(ENDPOINTS.cashierProfile),
@@ -194,7 +217,8 @@ describe('authentication', () => {
 
     const error = await rejection(client.request(ENDPOINTS.cashierProfile));
 
-    assert.match((error as Error).message, /^Sign-in failed: .* did not contain an access token.$/);
+    assert.ok(error instanceof SignInError);
+    assert.match(error.message, /^Sign-in failed: .* did not contain an access token\.$/);
     assert.equal(api.callsTo(ME).length, 0);
   });
 
@@ -234,27 +258,57 @@ describe('authentication', () => {
   });
 });
 
-describe('sign-out', () => {
-  it('revokes the token and forgets it', async () => {
+describe('closing the session', () => {
+  it('revokes the token and refuses further authenticated requests', async () => {
     const { api, client } = setup();
     api.on('GET', ME, json({}));
     api.on('POST', '/api/v1/cashier/signout', new Response(null, { status: 205 }));
     await client.request(ENDPOINTS.cashierProfile);
 
-    await client.signOut();
+    await client.close();
 
     const signOut = api.callsTo('/api/v1/cashier/signout');
     assert.equal(signOut.length, 1);
     assert.equal(assertMatchesSpec(signOut[0]!), 'POST /api/v1/cashier/signout');
     assert.equal(signOut[0]!.headers['authorization'], 'Bearer token-1');
 
+    const error = await rejection(client.request(ENDPOINTS.cashierProfile));
+    assert.match((error as Error).message, /shutting down/);
+    assert.equal(api.signIns, 1, 'a closed client never signs in again');
+  });
+
+  it('is idempotent: closing twice signs out once', async () => {
+    const { api, client } = setup();
+    api.on('GET', ME, json({}));
+    api.on('POST', '/api/v1/cashier/signout', new Response(null, { status: 205 }));
     await client.request(ENDPOINTS.cashierProfile);
-    assert.equal(api.signIns, 2, 'a later request signs in again');
+
+    await Promise.all([client.close(), client.close()]);
+    await client.close();
+
+    assert.equal(api.callsTo('/api/v1/cashier/signout').length, 1);
+  });
+
+  it('waits for a sign-in that is under way and revokes its token too', async () => {
+    const { api, client } = setup();
+    let finishSignIn!: () => void;
+    const gate = new Promise<void>((resolve) => (finishSignIn = resolve));
+    api.on('POST', '/api/v1/cashier/signin', () => gate.then(() => json({ access_token: 'late-token' })));
+    api.on('GET', ME, json({}));
+    api.on('POST', '/api/v1/cashier/signout', new Response(null, { status: 205 }));
+
+    const pending = client.request(ENDPOINTS.cashierProfile);
+    const closed = client.close();
+    finishSignIn();
+    await Promise.all([pending, closed]);
+
+    const [signOut] = api.callsTo('/api/v1/cashier/signout');
+    assert.equal(signOut?.headers['authorization'], 'Bearer late-token');
   });
 
   it('does nothing when no token was ever obtained', async () => {
     const { api, client } = setup();
-    await client.signOut();
+    await client.close();
     assert.equal(api.requests.length, 0);
   });
 
@@ -266,7 +320,7 @@ describe('sign-out', () => {
     });
     await client.request(ENDPOINTS.cashierProfile);
 
-    await client.signOut();
+    await client.close();
   });
 });
 
@@ -329,6 +383,21 @@ describe('requests', () => {
     const [close] = api.callsTo('/api/v1/shifts/close');
     assert.equal(close!.body, undefined);
     assert.equal(close!.headers['content-type'], undefined);
+  });
+
+  it('never follows a redirect: the license key and the request body stay with the configured host', async () => {
+    const { api, client } = setup();
+    api.on('GET', '/api/v1/cash-registers/info', () =>
+      Promise.resolve(new Response(null, { status: 302, headers: { location: 'https://elsewhere.example/' } })),
+    );
+
+    const error = await rejection(client.request(ENDPOINTS.cashRegisterInfo));
+
+    assert.ok(api.requests.every((request) => request.redirect === 'manual'));
+    assert.ok(error instanceof UnexpectedResponseError);
+    assert.match(error.message, /answered with a redirect \(HTTP 302\)/);
+    assert.match(error.message, /CHECKBOX_API_URL/);
+    assert.equal(api.requests.length, 1);
   });
 });
 
@@ -397,10 +466,8 @@ describe('error mapping', () => {
 
     const error = await rejection(client.request(ENDPOINTS.cashierProfile));
 
-    assert.equal(
-      (error as Error).message,
-      'GET /api/v1/cashier/me: the Checkbox API answered with a body that is not valid JSON.',
-    );
+    assert.ok(error instanceof UnexpectedResponseError);
+    assert.equal(error.message, 'GET /api/v1/cashier/me was answered with HTTP 200 and a body that is not valid JSON.');
   });
 
   it('removes configured secrets and the token from error messages', async () => {
@@ -412,6 +479,31 @@ describe('error mapping', () => {
     const error = await rejection(client.request(ENDPOINTS.cashierProfile));
 
     assert.equal((error as Error).message, 'bad [redacted] [redacted] Bearer [redacted]');
+  });
+
+  it('removes a secret even where the length limit would cut it in half', async () => {
+    const { api, client } = setup();
+    api.on('GET', ME, text(`${'x'.repeat(495)}${PASSWORD} and more`, 500));
+
+    const error = await rejection(client.request(ENDPOINTS.cashierProfile));
+
+    const { message } = error as Error;
+    assert.equal(message.length, 500);
+    assert.ok(message.endsWith('xxxxx[reda'), message.slice(-20));
+    assert.ok(!message.includes(PASSWORD.slice(0, 5)));
+  });
+
+  it('keeps removing a token after it was replaced', async () => {
+    const { api, client } = await setupWithAgedToken();
+    api.on('GET', ME, (request) =>
+      request.headers['authorization'] === 'Bearer token-1'
+        ? json({ message: 'expired' }, 401)
+        : json({ message: 'token-1 was replaced by token-2' }, 400),
+    );
+
+    const error = await rejection(client.request(ENDPOINTS.cashierProfile));
+
+    assert.equal((error as Error).message, '[redacted] was replaced by [redacted]');
   });
 
   it('turns a timeout into a transport error', async () => {
@@ -436,7 +528,25 @@ describe('error mapping', () => {
     assert.equal(error.kind, 'network');
     assert.equal(
       describeError(error),
-      'GET /api/v1/cash-registers/info failed: could not reach https://api.checkbox.test (ENOTFOUND).',
+      'GET /api/v1/cash-registers/info failed: no usable response from https://api.checkbox.test (ENOTFOUND).',
     );
+  });
+
+  it('turns a response whose body breaks off into a transport error', async () => {
+    const { api, client } = setup();
+    api.on('GET', '/api/v1/cash-registers/info', () => {
+      const body = new ReadableStream({
+        start(controller) {
+          controller.error(new TypeError('terminated'));
+        },
+      });
+      return new Response(body, { status: 200, headers: { 'content-type': 'application/json' } });
+    });
+
+    const error = await rejection(client.request(ENDPOINTS.cashRegisterInfo));
+
+    assert.ok(error instanceof CheckboxTransportError);
+    assert.equal(error.kind, 'network');
+    assert.match(error.message, /no usable response from https:\/\/api\.checkbox\.test \(terminated\)/);
   });
 });

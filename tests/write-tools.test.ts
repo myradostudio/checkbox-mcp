@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 
 import type { FetchLike } from '../src/client.js';
-import { FakeApi, hang, json, type RecordedRequest } from './support/fake-api.js';
+import { FakeApi, hang, json, text, type RecordedRequest } from './support/fake-api.js';
 import * as fx from './support/fixtures.js';
 import { createHarness, LICENSE_KEY, type Harness } from './support/harness.js';
 import { assertMatchesSpec } from './support/spec.js';
@@ -104,6 +104,25 @@ describe('shifts', () => {
     assert.equal(result.isError, false);
     assert.match(result.text, new RegExp(`open shift ${id}`));
     assert.match(result.text, /"status": "CREATED"/);
+  });
+
+  it('open_shift and close_shift say how to check when the outcome is unknown', async () => {
+    const h = await start();
+    h.api.on('POST', '/api/v1/shifts', json({ message: 'Bad gateway' }, 502));
+    h.api.on('POST', '/api/v1/shifts/close', json({ message: 'Bad gateway' }, 502));
+
+    const opened = await h.call('open_shift', { id: fx.IDS.shift });
+    const closed = await h.call('close_shift');
+
+    for (const result of [opened, closed]) {
+      assert.equal(result.isError, true);
+      assert.ok(
+        result.text.startsWith('Checkbox API error (HTTP 502): Bad gateway\nIt is unknown whether Checkbox registered the operation'),
+        result.text,
+      );
+      assert.match(result.text, /get_current_shift/);
+    }
+    assert.ok(opened.text.includes(`with the same id ${fx.IDS.shift}`));
   });
 
   it('open_shift uses the id supplied by the caller', async () => {
@@ -321,10 +340,52 @@ describe('create_sale_receipt', () => {
     const result = await harness.call('create_sale_receipt', { ...sale, id: RECEIPT_ID });
 
     assert.equal(result.isError, true);
-    assert.match(result.text, /^POST \/api\/v1\/receipts\/sell timed out after 0\.03 s\./);
+    assert.match(result.text, /^POST \/api\/v1\/receipts\/sell timed out after 0\.03 s\.\n/);
     assert.match(result.text, /It is unknown whether Checkbox registered the operation\. Do not simply repeat the call\./);
     assert.match(result.text, new RegExp(`First call get_receipt with id ${RECEIPT_ID}`));
     assert.match(result.text, new RegExp(`again with the same id ${RECEIPT_ID}`));
+  });
+
+  it('treats gateway errors, 429 and unreadable answers as an unknown outcome too', async () => {
+    // In all these cases Checkbox may have registered the receipt. A plain error would
+    // invite a second call without the id, and with it a duplicate fiscal document.
+    const answers: [string, () => Response][] = [
+      ['HTTP 504', () => text('<html>Gateway Time-out</html>', 504)],
+      ['HTTP 502', () => json({ message: 'Bad gateway' }, 502)],
+      ['HTTP 429', () => json({ message: 'Too many requests' }, 429)],
+      ['not valid JSON', () => text('<html>ok</html>', 201)],
+      ['redirect', () => new Response(null, { status: 307, headers: { location: 'https://elsewhere.example/' } })],
+    ];
+    for (const [label, answer] of answers) {
+      const h = await start();
+      h.api.on('POST', '/api/v1/receipts/sell', answer);
+
+      const result = await h.call('create_sale_receipt', sale);
+
+      const { id } = h.api.callsTo('/api/v1/receipts/sell')[0]!.body as { id: string };
+      assert.equal(result.isError, true, label);
+      assert.ok(result.text.includes(label), `${label}: ${result.text}`);
+      assert.match(result.text, /It is unknown whether Checkbox registered the operation/, label);
+      assert.ok(result.text.includes(`again with the same id ${id}`), `${label}: names the generated id`);
+      assert.equal(h.api.callsTo('/api/v1/receipts/sell').length, 1, `${label}: the server itself does not retry`);
+      await h.close();
+    }
+    harness = undefined;
+  });
+
+  it('reports definite refusals without that warning', async () => {
+    for (const status of [400, 403, 404, 422]) {
+      const h = await start();
+      h.api.on('POST', '/api/v1/receipts/sell', json({ message: 'Відмовлено' }, status));
+
+      const result = await h.call('create_sale_receipt', sale);
+
+      assert.equal(result.isError, true);
+      assert.ok(result.text.startsWith(`Checkbox API error (HTTP ${status}): Відмовлено`), result.text);
+      assert.doesNotMatch(result.text, /unknown whether/);
+      await h.close();
+    }
+    harness = undefined;
   });
 });
 

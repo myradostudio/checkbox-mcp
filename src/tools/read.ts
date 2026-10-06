@@ -1,6 +1,10 @@
 /**
  * Read-only tools. They only issue GET requests and are always registered.
  *
+ * Input schemas are strict here too: an argument the tool does not know (say,
+ * `status` on search_receipts) is rejected instead of ignored, so the model never
+ * believes it applied a filter that was silently dropped.
+ *
  * Units, as documented by Checkbox: money amounts are integers in kopecks
  * (1 UAH = 100) and quantities are integers in thousandths (1 piece = 1000).
  */
@@ -38,7 +42,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Returns the cashier this server is signed in as: name, permissions, signature type, whether it is a test cashier (is_test), and the organization (title, EDRPOU, tax number, VAT status, offline and SMS settings). Call this first to learn whose data the other tools will show.',
     access: 'read',
-    inputSchema: z.object({}),
+    inputSchema: z.strictObject({}),
     annotations: READ_ONLY,
     handler: async (_args, { client }) => ({ data: await client.request(ENDPOINTS.cashierProfile) }),
   }),
@@ -49,7 +53,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Lists the cash registers (ПРРО) available to the cashier, each with its fiscal number, address, branch, online/offline mode and the currently open shift if there is one. Use the returned ids to filter receipts and reports.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       in_use: z.boolean().optional().describe('Filter by whether the cash register is currently in use.'),
       fiscal_number: z.string().min(1).optional().describe('Fiscal number of the cash register.'),
       limit,
@@ -71,7 +75,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Returns one cash register (ПРРО). With cash_register_id: full details including offline_mode (true means the register works offline) and the open shift. Without it: the register that CHECKBOX_LICENSE_KEY belongs to, including its title, address, has_shift, is_test and the numbers of the last documents.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       cash_register_id: uuid('Cash register id').optional(),
     }),
     annotations: READ_ONLY,
@@ -90,7 +94,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Reports how the cash register behind CHECKBOX_LICENSE_KEY stands with offline mode: how many offline fiscal codes are available and whether that is enough, plus the offline sessions and total offline time, optionally limited to a period. Checkbox documents a limit of 36 hours offline in a row and 168 hours per month. Durations are passed through as the API returns them.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       from_date: dateTime('Count offline time from this moment.').optional(),
       to_date: dateTime('Count offline time up to this moment.').optional(),
     }),
@@ -110,7 +114,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Returns the active shift (зміна) of the signed-in cashier: status, opening time, cash register, running balance (cash and card sales, returns, service cash in/out) and per-tax totals. Tells you when the cashier has no open shift.',
     access: 'read',
-    inputSchema: z.object({}),
+    inputSchema: z.strictObject({}),
     annotations: READ_ONLY,
     handler: async (_args, { client }) => {
       const shift = await client.request(ENDPOINTS.cashierShift);
@@ -124,7 +128,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Lists shifts (зміни) with status, open and close times, balance and the Z-report reference. scope "cashier" (default) lists shifts of the signed-in cashier; scope "cash_register" lists shifts of the cash register behind CHECKBOX_LICENSE_KEY, whoever opened them (page size capped at 50). Use get_shift for the full record.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       scope: z.enum(['cashier', 'cash_register']).optional().describe('Whose shifts to list. Default "cashier".'),
       statuses: z.array(z.enum(SHIFT_STATUSES)).min(1).optional().describe('Only shifts in these statuses.'),
       from_date: dateTime('Only shifts from this moment.').optional(),
@@ -156,7 +160,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Returns one shift (зміна) in full: status, cashier, cash register, balance, per-tax totals, the opening and closing transactions and the embedded Z-report once the shift is closed.',
     access: 'read',
-    inputSchema: z.object({ shift_id: uuid('Shift id') }),
+    inputSchema: z.strictObject({ shift_id: uuid('Shift id') }),
     annotations: READ_ONLY,
     handler: async (args, { client }) => ({
       data: await client.request(ENDPOINTS.shift, { pathParams: { shift_id: args.shift_id } }),
@@ -169,7 +173,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Finds receipts (чеки) by period, fiscal number, barcode, shift, cash register or branch. Returns a summary per receipt: type (SELL, RETURN, SERVICE_IN, SERVICE_OUT, ...), status (DONE means fiscalized), fiscal number, totals, goods and payments. The API has no filter by status or type, so filter the returned rows yourself. By default only receipts created by the signed-in cashier are returned. Use get_receipt for the full record.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       from_date: dateTime('Receipts from this moment.').optional(),
       to_date: dateTime('Receipts before this moment.').optional(),
       fiscal_code: z.string().min(1).optional().describe('Fiscal number of the receipt.'),
@@ -215,7 +219,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Returns one receipt (чек). format "json": the full record with goods, payments, taxes, discounts, fiscal number, status and the link to the tax service (tax_url). format "text": the receipt exactly as it is printed. A receipt that was created a moment ago can answer "still being created"; retry after a second.',
     access: 'read',
-    inputSchema: z.object({ receipt_id: receiptId, format }),
+    inputSchema: z.strictObject({ receipt_id: receiptId, format }),
     annotations: READ_ONLY,
     handler: async (args, { client }) => ({
       data: await client.request(args.format === 'text' ? ENDPOINTS.receiptText : ENDPOINTS.receipt, {
@@ -230,7 +234,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Lists X-reports (interim, non-fiscal) and Z-reports (end of shift) with receipt counts, cash balance and totals per payment form. Filter by period, shift, cash register, serial number or report type. Use get_report for tax breakdowns or the printable text.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       report_type: z.enum(['X', 'Z']).optional().describe('Only X-reports or only Z-reports. Default: both.'),
       from_date: dateTime('Reports from this moment.').optional(),
       to_date: dateTime('Reports before this moment.').optional(),
@@ -266,7 +270,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Returns one X- or Z-report. format "json": the full record with totals per payment form and per tax rate, receipt counts, rounding and cash balance. format "text": the report exactly as it is printed.',
     access: 'read',
-    inputSchema: z.object({ report_id: uuid('Report id'), format }),
+    inputSchema: z.strictObject({ report_id: uuid('Report id'), format }),
     annotations: READ_ONLY,
     handler: async (args, { client }) => ({
       data: await client.request(args.format === 'text' ? ENDPOINTS.reportText : ENDPOINTS.report, {
@@ -281,7 +285,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Returns the periodical report (періодичний звіт) of the cash register behind CHECKBOX_LICENSE_KEY for a date range, as printable text: totals built from the Z-reports of the period, by tax rate and payment form, returns, cash in the register and each Z-report with its number and date. The API offers this report as text only.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       from_date: dateTime('Start of the period.'),
       to_date: dateTime('End of the period.'),
       short: z.boolean().optional().describe('Request the short form of the report. Default false.'),
@@ -305,7 +309,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Searches the goods catalogue (номенклатура) kept in Checkbox. Returns code, name, price in kopecks, barcode, UKTZED code, group, tax rates and stock count where the organization tracks it. The catalogue can be empty when the organization does not keep its goods in Checkbox.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       query: z.string().min(1).optional().describe('Search text.'),
       group_id: uuid('Only goods of this group').optional(),
       limit,
@@ -327,7 +331,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Lists the tax rates configured for the organization: numeric code, letter symbol, label, rate and extra rate in percent, and whether the tax is included in the price. The numeric code is what a receipt line refers to in its tax list.',
     access: 'read',
-    inputSchema: z.object({}),
+    inputSchema: z.strictObject({}),
     annotations: READ_ONLY,
     handler: async (_args, { client }) => ({ data: await client.request(ENDPOINTS.cashierTaxes) }),
   }),
@@ -338,7 +342,7 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Lists orders (замовлення): draft receipts that an external system created in Checkbox, to be fiscalized by a courier after delivery and payment. Returns status, payment state and method, and the linked receipt id. Customer delivery details are left out here; get_order returns them.',
     access: 'read',
-    inputSchema: z.object({
+    inputSchema: z.strictObject({
       statuses: z.array(z.enum(ORDER_STATUSES)).min(1).optional().describe('Only orders in these statuses.'),
       external_order_id: z.string().min(1).optional().describe('Order id in the delivery service.'),
       delivered_from_date: dateTime('Orders delivered from this moment.').optional(),
@@ -375,8 +379,8 @@ export const readTools: readonly AnyTool[] = [
     description:
       'Returns one order in full: status, payment, the receipt draft with goods and payments, and the delivery details. The result contains personal data of the customer (name, phone number, address); do not repeat it unless the user asks for it.',
     access: 'read',
-    inputSchema: z.object({
-      order_id: z.string().min(1).max(128).describe('Order id as returned by list_orders (field "id").'),
+    inputSchema: z.strictObject({
+      order_id: uuid('Order id as returned by list_orders in the field "id"'),
       whole_organization: z
         .boolean()
         .optional()

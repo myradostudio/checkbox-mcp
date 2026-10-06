@@ -3,10 +3,10 @@
  *
  * Responsibilities:
  *  - sign in lazily (PIN code or login/password) and keep the token in memory only;
- *  - re-authenticate once when the API answers 401 to an authenticated call
- *    (at most once per minute, so a 401 that is not about the token cannot burn
- *    through the cashier's token slots);
- *  - apply a timeout to every request;
+ *  - re-authenticate once when the API answers 401 to an authenticated call, but
+ *    never within a minute of the previous sign-in, so a 401 that is not about
+ *    the token cannot burn through the cashier's token slots;
+ *  - apply a timeout to every request and never follow redirects;
  *  - turn failures into typed errors whose messages never contain secrets.
  *
  * Nothing is logged here: request and response bodies can contain customer
@@ -15,7 +15,13 @@
 
 import type { Config } from './config.js';
 import { ENDPOINTS, type Endpoint } from './endpoints.js';
-import { CheckboxApiError, CheckboxTransportError, MissingLicenseKeyError } from './errors.js';
+import {
+  CheckboxApiError,
+  CheckboxTransportError,
+  MissingLicenseKeyError,
+  SignInError,
+  UnexpectedResponseError,
+} from './errors.js';
 import { SERVER_NAME, SERVER_VERSION } from './version.js';
 
 export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
@@ -41,8 +47,9 @@ const SIGN_OUT_TIMEOUT_MS = 3_000;
 /**
  * Checkbox documents HTTP 401 both for an invalid token and for an invalid license
  * key, and allows a cashier at most three valid tokens, removing older ones as new
- * ones are issued. Limiting re-authentication keeps a wrong license key from
- * signing in on every call and pushing out the tokens of the cashier's other devices.
+ * ones are issued. A token that was issued less than a minute ago is therefore not
+ * replaced on a 401: otherwise a wrong license key would sign in on every call and
+ * push out the tokens of the cashier's other devices.
  */
 const REAUTH_COOLDOWN_MS = 60_000;
 const MAX_ERROR_BODY_CHARS = 500;
@@ -53,8 +60,11 @@ export class CheckboxClient {
   private readonly fetchImpl: FetchLike;
   private readonly now: () => number;
   private token: string | undefined;
-  private lastReauthAt: number | undefined;
+  private lastSignInAt: number | undefined;
   private signInFlight: Promise<string> | undefined;
+  private closing: Promise<void> | undefined;
+  /** Every token of this process, so that a revoked one is still scrubbed from error texts. */
+  private readonly issuedTokens = new Set<string>();
 
   constructor(options: CheckboxClientOptions) {
     this.config = options.config;
@@ -76,10 +86,9 @@ export class CheckboxClient {
         // Nobody has replaced the rejected token yet: decide whether to sign in again.
         if (!this.canReauthenticate()) return this.parse<T>(endpoint, response);
         this.token = undefined;
-        this.lastReauthAt = this.now();
       }
-      // A 401 means the request was rejected before any processing, so repeating it
-      // once with a fresh token is safe even for write operations.
+      // A 401 means the request was refused for authentication, so repeating it once
+      // with a fresh token is safe even for write operations.
       discard(response);
       response = await this.send(endpoint, options, await this.getToken());
     }
@@ -88,10 +97,18 @@ export class CheckboxClient {
   }
 
   /**
-   * Best-effort sign-out so the token does not linger after the server stops.
-   * Never throws.
+   * Ends the session: waits for a sign-in that is under way, revokes the token
+   * (best effort) and refuses further authenticated requests. Never throws.
    */
-  async signOut(): Promise<void> {
+  close(): Promise<void> {
+    this.closing ??= this.revokeToken();
+    return this.closing;
+  }
+
+  private async revokeToken(): Promise<void> {
+    // Without this a token obtained by a sign-in still in flight would never be revoked.
+    await this.signInFlight?.catch(() => undefined);
+
     const token = this.token;
     this.token = undefined;
     if (token === undefined) return;
@@ -103,10 +120,13 @@ export class CheckboxClient {
   }
 
   private canReauthenticate(): boolean {
-    return this.lastReauthAt === undefined || this.now() - this.lastReauthAt >= REAUTH_COOLDOWN_MS;
+    return this.lastSignInAt === undefined || this.now() - this.lastSignInAt >= REAUTH_COOLDOWN_MS;
   }
 
   private getToken(): Promise<string> {
+    if (this.closing !== undefined) {
+      return Promise.reject(new Error('The server is shutting down; the request was not sent.'));
+    }
     if (this.token !== undefined) return Promise.resolve(this.token);
     // Concurrent tool calls share one sign-in instead of each consuming a token slot.
     this.signInFlight ??= this.signIn().finally(() => {
@@ -134,9 +154,11 @@ export class CheckboxClient {
 
     const token = (result as { access_token?: unknown } | null)?.access_token;
     if (typeof token !== 'string' || token === '') {
-      throw new Error('Sign-in failed: the response of the Checkbox API did not contain an access token.');
+      throw new SignInError('Sign-in failed: the response of the Checkbox API did not contain an access token.');
     }
     this.token = token;
+    this.lastSignInAt = this.now();
+    this.issuedTokens.add(token);
     return token;
   }
 
@@ -160,7 +182,14 @@ export class CheckboxClient {
     }
 
     const url = buildUrl(this.config.apiUrl, endpoint, options);
-    const init: RequestInit = { method: endpoint.method, headers, signal: AbortSignal.timeout(timeoutMs) };
+    const init: RequestInit = {
+      method: endpoint.method,
+      headers,
+      signal: AbortSignal.timeout(timeoutMs),
+      // A redirect would forward the license key to another host, and a redirected
+      // POST is repeated as a GET without its body. Neither may happen silently.
+      redirect: 'manual',
+    };
     if (options.body !== undefined) {
       headers['Content-Type'] = 'application/json';
       init.body = JSON.stringify(options.body);
@@ -169,20 +198,24 @@ export class CheckboxClient {
     try {
       return await this.fetchImpl(url, init);
     } catch (error) {
-      const operation = `${endpoint.method} ${endpoint.path}`;
-      if (isTimeout(error)) {
-        throw new CheckboxTransportError('timeout', `${operation} timed out after ${timeoutMs / 1000} s.`);
-      }
-      throw new CheckboxTransportError(
-        'network',
-        this.scrub(`${operation} failed: could not reach ${this.config.apiUrl} (${networkCause(error)}).`),
-      );
+      throw this.toTransportError(endpoint, error, timeoutMs);
     }
   }
 
   private async parse<T>(endpoint: Endpoint, response: Response): Promise<T> {
-    const text = await response.text();
+    let text: string;
+    try {
+      text = await response.text();
+    } catch (error) {
+      // The headers arrived but the body did not: the timeout or the connection cut it off.
+      throw this.toTransportError(endpoint, error, this.config.timeoutMs);
+    }
 
+    if (response.status >= 300 && response.status < 400) {
+      throw new UnexpectedResponseError(
+        `${endpoint.method} ${endpoint.path} was answered with a redirect (HTTP ${response.status}), which the server does not follow. Check that CHECKBOX_API_URL is the API origin itself.`,
+      );
+    }
     if (!response.ok) {
       throw this.toApiError(response.status, response.statusText, text);
     }
@@ -195,37 +228,52 @@ export class CheckboxClient {
     try {
       return JSON.parse(text) as T;
     } catch {
-      throw new Error(`${endpoint.method} ${endpoint.path}: the Checkbox API answered with a body that is not valid JSON.`);
+      throw new UnexpectedResponseError(
+        `${endpoint.method} ${endpoint.path} was answered with HTTP ${response.status} and a body that is not valid JSON.`,
+      );
     }
   }
 
+  private toTransportError(endpoint: Endpoint, error: unknown, timeoutMs: number): CheckboxTransportError {
+    const operation = `${endpoint.method} ${endpoint.path}`;
+    if (isTimeout(error)) {
+      return new CheckboxTransportError('timeout', `${operation} timed out after ${timeoutMs / 1000} s.`);
+    }
+    return new CheckboxTransportError(
+      'network',
+      this.scrub(`${operation} failed: no usable response from ${this.config.apiUrl} (${networkCause(error)}).`),
+    );
+  }
+
   private toApiError(status: number, statusText: string, text: string): CheckboxApiError {
-    let message = text.trim().slice(0, MAX_ERROR_BODY_CHARS) || statusText || 'Empty error response.';
+    // Scrub before truncating: a secret cut in half by the limit would no longer be recognised.
+    let message = this.scrub(text.trim()).slice(0, MAX_ERROR_BODY_CHARS) || statusText || 'Empty error response.';
     let details: string[] = [];
 
     try {
       const parsed: unknown = JSON.parse(text);
       if (parsed !== null && typeof parsed === 'object') {
         const { message: apiMessage, detail } = parsed as { message?: unknown; detail?: unknown };
-        details = formatValidationDetails(detail);
-        if (typeof apiMessage === 'string' && apiMessage !== '') message = apiMessage;
-        else if (details.length > 0) message = 'Validation error.';
+        details = formatValidationDetails(detail).map((line) => this.scrub(line));
+        if (typeof apiMessage === 'string' && apiMessage !== '') {
+          message = this.scrub(apiMessage).slice(0, MAX_ERROR_BODY_CHARS);
+        } else if (details.length > 0) {
+          message = 'Validation error.';
+        }
       }
     } catch {
       // Not JSON (for example an HTML error page from a proxy): keep the truncated text.
     }
 
-    return new CheckboxApiError(status, this.scrub(message), details.map((line) => this.scrub(line)));
+    return new CheckboxApiError(status, message, details);
   }
 
   /** Defence in depth: removes configured secrets from any text that leaves the client. */
   private scrub(text: string): string {
     const { auth, licenseKey } = this.config;
-    const secrets = [
-      auth.method === 'pin' ? auth.pinCode : auth.password,
-      licenseKey,
-      this.token,
-    ].filter((secret): secret is string => secret !== undefined && secret.length >= 4);
+    const secrets = [auth.method === 'pin' ? auth.pinCode : auth.password, licenseKey, ...this.issuedTokens].filter(
+      (secret): secret is string => secret !== undefined && secret.length >= 4,
+    );
 
     let result = text;
     for (const secret of secrets) result = result.split(secret).join(REDACTED);

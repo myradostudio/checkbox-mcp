@@ -152,6 +152,7 @@ describe('stdio server process', () => {
   });
 
   it('adds the write tools when CHECKBOX_ALLOW_WRITE=1, also for a client of the 2026 protocol', async () => {
+    apiCalls.length = 0;
     const transport = new StdioClientTransport({
       command: process.execPath,
       args: [SERVER_ENTRY],
@@ -166,9 +167,19 @@ describe('stdio server process', () => {
 
     const protocolVersion = client.getNegotiatedProtocolVersion() ?? '';
     const { tools } = await client.listTools();
+    const profile = await client.callTool({ name: 'get_cashier_profile', arguments: {} });
     await client.close();
 
     assert.ok(protocolVersion >= '2026-07-28', `negotiated ${protocolVersion}`);
+    assert.notEqual(profile.isError, true);
+    // The SDK may build and discard a server instance while negotiating the version;
+    // the token must be revoked once, at the real end of the connection, in this era too.
+    const signedOut = await waitFor(() => apiCalls.some((call) => call.path === '/api/v1/cashier/signout'), 3_000);
+    assert.ok(signedOut, 'the token is revoked when the client disconnects');
+    assert.deepEqual(
+      apiCalls.map((call) => call.path),
+      ['/api/v1/cashier/signin', '/api/v1/cashier/me', '/api/v1/cashier/signout'],
+    );
     assert.equal(tools.length, 23);
     assert.deepEqual(
       tools.filter((tool) => tool.annotations?.readOnlyHint !== true).map((tool) => tool.name),

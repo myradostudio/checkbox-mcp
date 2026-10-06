@@ -533,6 +533,16 @@ describe('goods, taxes and orders', () => {
     assert.ok(!serialised.includes('Олена') && !serialised.includes('380501112233') && !serialised.includes('customer@'));
   });
 
+  it('get_order accepts only a UUID, so nothing else can end up in the request path', async () => {
+    const h = await start();
+
+    for (const id of ['WEB-1042', '../cashier/me', 'a/b', '..']) {
+      const result = await h.call('get_order', { order_id: id });
+      assert.equal(result.isError, true, id);
+    }
+    assert.equal(h.api.requests.length, 0);
+  });
+
   it('get_order returns the full order', async () => {
     const h = await start();
     h.api.on('GET', `/api/v1/orders/${fx.IDS.order}`, json(fx.order));
@@ -542,6 +552,21 @@ describe('goods, taxes and orders', () => {
     const request = onlyRequest(h, 'GET /api/v1/orders/{order_id}');
     assert.deepEqual(query(request), { orders_all: 'true' });
     assert.equal(order.delivery_details.client_name, 'Олена Тестова');
+  });
+});
+
+describe('unknown arguments', () => {
+  it('are rejected, so a filter the API does not have is never silently ignored', async () => {
+    const h = await start();
+
+    const byStatus = await h.call('search_receipts', { status: 'DONE' });
+    const singular = await h.call('list_reports', { cash_register_id: fx.IDS.cashRegister });
+    const noArguments = await h.call('get_current_shift', { verbose: true });
+
+    for (const result of [byStatus, singular, noArguments]) assert.equal(result.isError, true);
+    assert.match(byStatus.text, /status/);
+    assert.match(singular.text, /cash_register_id/);
+    assert.equal(h.api.requests.length, 0);
   });
 });
 

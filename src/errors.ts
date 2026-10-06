@@ -30,6 +30,25 @@ export class CheckboxTransportError extends Error {
   }
 }
 
+/**
+ * A response arrived but cannot be interpreted: a redirect, or a success status
+ * with a body that is not JSON. For a write this leaves the outcome unknown.
+ */
+export class UnexpectedResponseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UnexpectedResponseError';
+  }
+}
+
+/** Sign-in did not produce a token, so the actual request was never sent. */
+export class SignInError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SignInError';
+  }
+}
+
 /** A tool needs `X-License-Key` but CHECKBOX_LICENSE_KEY is not configured. */
 export class MissingLicenseKeyError extends Error {
   constructor() {

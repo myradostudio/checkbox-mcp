@@ -31,21 +31,19 @@ function main(): void {
 
   const client = new CheckboxClient({ config });
 
-  // The token is released when the connection ends, so it does not occupy one of
-  // the cashier's token slots after the MCP client is gone. Best effort only.
-  let signOut: Promise<void> | undefined;
-  const signOutOnce = (): Promise<void> => (signOut ??= client.signOut());
-
-  const handle = serveStdio(
-    () => {
-      const server = createServer({ config, client });
-      server.server.onclose = () => void signOutOnce();
-      return server;
-    },
+  const handle = serveStdio(() => createServer({ config, client }), {
     // Only the error type is logged: the message of a parse error can quote the
     // offending input, and tool arguments may contain customer data.
-    { onerror: (error) => log(`Transport error (${error.name}).`) },
-  );
+    onerror: (error) => log(`Transport error (${error.name}).`),
+  });
+
+  // The token is revoked when the connection really ends, so it does not occupy
+  // one of the cashier's token slots after the MCP client is gone (best effort).
+  // The trigger is stdin reaching its end, not `server.onclose`: while negotiating
+  // the protocol version the SDK may build a server instance and discard it again.
+  const endSession = (): void => void client.close();
+  process.stdin.once('end', endSession);
+  process.stdin.once('close', endSession);
 
   let stopping = false;
   const stop = (): void => {
@@ -54,7 +52,7 @@ function main(): void {
     void handle
       .close()
       .catch(() => undefined)
-      .then(signOutOnce)
+      .then(() => client.close())
       .finally(() => process.exit(0));
   };
   process.once('SIGINT', stop);

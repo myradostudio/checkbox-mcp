@@ -92,7 +92,8 @@ export function loadConfig(env: Env): Config {
   const notices: string[] = [];
 
   const login = read(env, 'CHECKBOX_LOGIN');
-  const password = read(env, 'CHECKBOX_PASSWORD');
+  // Not trimmed: unlike the other values, a password may start or end with a space.
+  const password = read(env, 'CHECKBOX_PASSWORD') === undefined ? undefined : env['CHECKBOX_PASSWORD'];
   const pinCode = read(env, 'CHECKBOX_PIN_CODE');
   const licenseKey = read(env, 'CHECKBOX_LICENSE_KEY');
   const apiUrl = parseApiUrl(read(env, 'CHECKBOX_API_URL'), problems);
