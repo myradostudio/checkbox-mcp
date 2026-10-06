@@ -16,6 +16,8 @@ English: [README.md](README.md)
 
 Потрібні Node.js 20 або новіший і облікові дані касира Checkbox. Щоб спробувати сервер, візьміть **тестового касира й тестову касу**, які Checkbox створює для кожного облікового запису (див. [Як спробувати на тестових даних Checkbox](#як-спробувати-на-тестових-даних-checkbox)).
 
+> **В npm пакета ще немає.** Доки перший реліз не опубліковано, команди `npx -y @myradostudio/checkbox-mcp` нижче не працюватимуть. Запускайте сервер із вихідного коду: `git clone https://github.com/myradostudio/checkbox-mcp`, далі `npm install` і `npm run build` у цій теці, а в налаштуваннях нижче вкажіть `"command": "node"` і `"args": ["/абсолютний/шлях/до/checkbox-mcp/dist/index.js"]`.
+
 ### Claude Desktop
 
 Додайте сервер до файлу `claude_desktop_config.json` (Settings → Developer → Edit Config):

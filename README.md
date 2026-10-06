@@ -16,6 +16,8 @@ In Ukraine most businesses that sell to consumers have to register each sale wit
 
 You need Node.js 20 or newer and the credentials of a Checkbox cashier. To try the server out, use the **test cashier and test cash register** that Checkbox creates for every account (see [Trying it with Checkbox test data](#trying-it-with-checkbox-test-data)).
 
+> **Not on npm yet.** Until the first release is published, the `npx -y @myradostudio/checkbox-mcp` commands below will not work. Run the server from source instead: `git clone https://github.com/myradostudio/checkbox-mcp`, then `npm install` and `npm run build` in that folder, and use `"command": "node"` with `"args": ["/absolute/path/to/checkbox-mcp/dist/index.js"]` in the configurations below.
+
 ### Claude Desktop
 
 Add the server to `claude_desktop_config.json` (Settings → Developer → Edit Config):
