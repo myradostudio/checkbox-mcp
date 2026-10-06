@@ -1,0 +1,49 @@
+name: Publish
+
+# Publishes to npm when a GitHub release is published.
+#
+# Setup, once: add an npm automation token with publish rights for the
+# @myradostudio scope as the repository secret NPM_TOKEN. The release tag must
+# be "v" followed by the version in package.json, e.g. v0.1.0.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write # lets npm attach a provenance statement to the package
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check that the tag matches package.json
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="v$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "Release tag $TAG does not match package.json version $VERSION" >&2
+            exit 1
+          fi
+
+      - name: Type-check, build and test
+        run: |
+          npm run lint
+          npm test
+
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

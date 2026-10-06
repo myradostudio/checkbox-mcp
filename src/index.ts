@@ -42,7 +42,9 @@ function main(): void {
       server.server.onclose = () => void signOutOnce();
       return server;
     },
-    { onerror: (error) => log(`Transport error: ${error.message}`) },
+    // Only the error type is logged: the message of a parse error can quote the
+    // offending input, and tool arguments may contain customer data.
+    { onerror: (error) => log(`Transport error (${error.name}).`) },
   );
 
   let stopping = false;

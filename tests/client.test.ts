@@ -194,8 +194,8 @@ describe('authentication', () => {
 
     const error = await rejection(client.request(ENDPOINTS.cashierProfile));
 
-    assert.ok(error instanceof CheckboxApiError);
-    assert.match(error.message, /did not contain an access token/);
+    assert.match((error as Error).message, /^Sign-in failed: .* did not contain an access token.$/);
+    assert.equal(api.callsTo(ME).length, 0);
   });
 
   it('does not sign in for operations that are not secured', async () => {
@@ -290,14 +290,14 @@ describe('requests', () => {
   it('refuses to build a URL with a missing path parameter', async () => {
     const { client } = setup();
     const error = await rejection(client.request(ENDPOINTS.shift, { pathParams: {} }));
-    assert.match((error as Error).message, /Missing path parameter "shift_id"/);
+    assert.equal((error as Error).message, 'Missing path parameter "shift_id" for /api/v1/shifts/{shift_id}.');
   });
 
   it('refuses dot segments that would redirect the request to another endpoint', async () => {
     const { api, client } = setup();
     for (const value of ['.', '..']) {
       const error = await rejection(client.request(ENDPOINTS.order, { pathParams: { order_id: value } }));
-      assert.match((error as Error).message, /Invalid value for path parameter "order_id"/);
+      assert.equal((error as Error).message, 'Invalid value for path parameter "order_id".');
     }
     assert.equal(api.callsTo(/orders/).length, 0);
   });
@@ -397,8 +397,10 @@ describe('error mapping', () => {
 
     const error = await rejection(client.request(ENDPOINTS.cashierProfile));
 
-    assert.ok(error instanceof CheckboxApiError);
-    assert.match(error.message, /not valid JSON/);
+    assert.equal(
+      (error as Error).message,
+      'GET /api/v1/cashier/me: the Checkbox API answered with a body that is not valid JSON.',
+    );
   });
 
   it('removes configured secrets and the token from error messages', async () => {

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.myradostudio/checkbox",
+  "title": "Checkbox ПРРО (unofficial)",
+  "description": "Unofficial server for Checkbox, a Ukrainian fiscal cash register: receipts, shifts, X/Z reports.",
+  "repository": {
+    "url": "https://github.com/myradostudio/checkbox-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://myradostudio.com/en/mcp-server-development/",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@myradostudio/checkbox-mcp",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CHECKBOX_PIN_CODE",
+          "description": "Cashier PIN code. Recommended sign-in method; requires CHECKBOX_LICENSE_KEY. Alternative: CHECKBOX_LOGIN with CHECKBOX_PASSWORD.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "CHECKBOX_LICENSE_KEY",
+          "description": "License key of the cash register. Required for PIN sign-in, for write tools and for the tools that report on that cash register.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "CHECKBOX_LOGIN",
+          "description": "Cashier login. Used together with CHECKBOX_PASSWORD when no PIN code is set.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "CHECKBOX_PASSWORD",
+          "description": "Cashier password. Used together with CHECKBOX_LOGIN when no PIN code is set.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "CHECKBOX_API_URL",
+          "description": "Origin of the Checkbox API. Change it only if Checkbox gave you a different host.",
+          "isRequired": false,
+          "isSecret": false,
+          "default": "https://api.checkbox.ua"
+        },
+        {
+          "name": "CHECKBOX_ALLOW_WRITE",
+          "description": "Set to true to register the write tools (open and close shifts, create fiscal receipts, send receipts). Off by default.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "boolean",
+          "default": "false"
+        }
+      ]
+    }
+  ]
+}

@@ -39,10 +39,10 @@ export interface CheckboxClientOptions {
 
 const SIGN_OUT_TIMEOUT_MS = 3_000;
 /**
- * Checkbox answers 401 both for a revoked token and for a wrong license key, and
- * keeps at most three tokens per cashier (a new sign-in evicts the oldest one).
- * Limiting re-authentication keeps a misconfigured license key from signing in on
- * every call and logging the cashier out of their other devices.
+ * Checkbox documents HTTP 401 both for an invalid token and for an invalid license
+ * key, and allows a cashier at most three valid tokens, removing older ones as new
+ * ones are issued. Limiting re-authentication keeps a wrong license key from
+ * signing in on every call and pushing out the tokens of the cashier's other devices.
  */
 const REAUTH_COOLDOWN_MS = 60_000;
 const MAX_ERROR_BODY_CHARS = 500;
@@ -134,7 +134,7 @@ export class CheckboxClient {
 
     const token = (result as { access_token?: unknown } | null)?.access_token;
     if (typeof token !== 'string' || token === '') {
-      throw new CheckboxApiError(502, 'Sign-in failed: the response did not contain an access token.');
+      throw new Error('Sign-in failed: the response of the Checkbox API did not contain an access token.');
     }
     this.token = token;
     return token;
@@ -159,6 +159,7 @@ export class CheckboxClient {
       else if (endpoint.licenseKey === 'required') throw new MissingLicenseKeyError();
     }
 
+    const url = buildUrl(this.config.apiUrl, endpoint, options);
     const init: RequestInit = { method: endpoint.method, headers, signal: AbortSignal.timeout(timeoutMs) };
     if (options.body !== undefined) {
       headers['Content-Type'] = 'application/json';
@@ -166,7 +167,7 @@ export class CheckboxClient {
     }
 
     try {
-      return await this.fetchImpl(buildUrl(this.config.apiUrl, endpoint, options), init);
+      return await this.fetchImpl(url, init);
     } catch (error) {
       const operation = `${endpoint.method} ${endpoint.path}`;
       if (isTimeout(error)) {
@@ -194,7 +195,7 @@ export class CheckboxClient {
     try {
       return JSON.parse(text) as T;
     } catch {
-      throw new CheckboxApiError(response.status, 'The API returned a response that is not valid JSON.');
+      throw new Error(`${endpoint.method} ${endpoint.path}: the Checkbox API answered with a body that is not valid JSON.`);
     }
   }
 
