@@ -60,9 +60,10 @@ function sanitize(value: unknown): unknown {
 function render(output: ToolOutput): CallToolResult {
   const parts: string[] = [];
   if (output.note !== undefined) parts.push(output.note);
-  if (output.data !== undefined) {
+  if (output.data !== undefined && output.data !== null) {
     parts.push(typeof output.data === 'string' ? output.data : JSON.stringify(sanitize(output.data), null, 2));
   }
+  if (parts.length === 0) parts.push('The Checkbox API returned an empty response.');
   return { content: [{ type: 'text', text: parts.join('\n\n') }] };
 }
 

@@ -429,6 +429,16 @@ describe('sending a receipt', () => {
     assert.ok(!result.text.includes('customer@example.com'));
   });
 
+  it('send_receipt_email copes with an empty response body', async () => {
+    const h = await start();
+    h.api.on('POST', `/api/v1/receipts/${fx.IDS.receipt}/email`, new Response(null, { status: 200 }));
+
+    const result = await h.call('send_receipt_email', { receipt_id: fx.IDS.receipt, emails: ['customer@example.com'] });
+
+    assert.equal(result.isError, false);
+    assert.equal(result.text, `Checkbox accepted the request to e-mail receipt ${fx.IDS.receipt} to 1 address(es).`);
+  });
+
   it('send_receipt_email rejects malformed addresses', async () => {
     const h = await start();
 
