@@ -1,0 +1,65 @@
+{
+  "name": "@myradostudio/checkbox-mcp",
+  "version": "0.1.0",
+  "description": "Unofficial MCP server for the Checkbox ПРРО API (Ukrainian software cash register): receipts, shifts, X/Z reports, goods, orders.",
+  "mcpName": "com.myradostudio/checkbox",
+  "type": "module",
+  "bin": {
+    "checkbox-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "server.json",
+    "README.md",
+    "README.uk.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "pretest": "npm run build && tsc -p tsconfig.test.json",
+    "test": "node scripts/run-tests.mjs",
+    "spec:update": "npm run build && node scripts/update-spec-snapshot.mjs",
+    "prepublishOnly": "npm run lint && npm test"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "checkbox",
+    "prro",
+    "пРРО",
+    "fiscal",
+    "cash-register",
+    "receipts",
+    "ukraine"
+  ],
+  "author": "Myrado Studio <hello@myradostudio.com>",
+  "license": "MIT",
+  "homepage": "https://myradostudio.com/en/mcp-server-development/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myradostudio/checkbox-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/myradostudio/checkbox-mcp/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.3.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.3.1",
+    "@types/node": "^20.19.43",
+    "typescript": "^7.0.2"
+  }
+}

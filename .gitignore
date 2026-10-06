@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build-test/
+*.tgz
+*.log
+.env
+.env.*
+
+# Full OpenAPI document downloaded by scripts/update-spec-snapshot.mjs.
+# Only the reduced snapshot (spec/checkbox-api.snapshot.json) is committed.
+spec/openapi.json
